@@ -1,0 +1,26 @@
+{
+  "name": "ficha-anestesia",
+  "version": "1.0.0",
+  "description": "Ficha de anestesia por voz (PWA)",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "serve": "python3 -m http.server 8080"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@napi-rs/canvas": "^1.1.0",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "jspdf": "^4.2.1",
+    "puppeteer-core": "^24.43.1",
+    "typescript": "^7.0.2"
+  }
+}

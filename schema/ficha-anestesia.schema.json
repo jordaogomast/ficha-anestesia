@@ -1,0 +1,573 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://exemplo.local/schemas/ficha-anestesia/1.1.0",
+  "title": "Ficha de anestesia",
+  "description": "Registro anestésico intraoperatório (pt-BR), com dados para faturamento junto ao plano de saúde (padrão TISS/TUSS). Horários são locais, formato AAAA-MM-DDTHH:MM, sem fuso. Hospital e identificadores administrativos são legados para compatibilidade; não coletados nem impressos. Preenchimento manuscrito.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "id",
+    "status",
+    "data",
+    "paciente",
+    "procedimento",
+    "tecnicaAnestesica",
+    "horarios",
+    "drogas",
+    "sinaisVitais",
+    "fluidos",
+    "diurese",
+    "perdaSanguinea",
+    "eventos",
+    "intercorrencias",
+    "observacoes",
+    "anotacoesExtras"
+  ],
+  "$defs": {
+    "horario": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$",
+      "description": "Data-hora local AAAA-MM-DDTHH:MM"
+    },
+    "origem": {
+      "enum": [
+        "voz",
+        "texto",
+        "manual"
+      ],
+      "description": "Como o registro foi capturado"
+    },
+    "registroBase": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "origem": {
+          "$ref": "#/$defs/origem"
+        },
+        "textoOriginal": {
+          "type": "string",
+          "description": "Transcrição/frase que originou o registro (auditoria)"
+        },
+        "horario": {
+          "$ref": "#/$defs/horario"
+        }
+      },
+      "required": [
+        "id",
+        "horario"
+      ]
+    },
+    "profissional": {
+      "type": "object",
+      "properties": {
+        "nome": {
+          "type": "string"
+        },
+        "crm": {
+          "type": "string"
+        },
+        "uf": {
+          "type": "string",
+          "maxLength": 2
+        }
+      },
+      "required": [
+        "nome",
+        "crm"
+      ]
+    },
+    "volume": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Volume em mL"
+    }
+  },
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.1.0"
+    },
+    "id": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "rascunho",
+        "salvo"
+      ]
+    },
+    "criadoEm": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "atualizadoEm": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "salvoEm": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "data": {
+      "type": "string",
+      "format": "date",
+      "description": "Data do procedimento"
+    },
+    "paciente": {
+      "type": "object",
+      "required": [
+        "nome",
+        "plano"
+      ],
+      "properties": {
+        "nome": {
+          "type": "string"
+        },
+        "dataNascimento": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "sexo": {
+          "enum": [
+            "M",
+            "F",
+            "O",
+            null
+          ]
+        },
+        "pesoKg": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 400
+        },
+        "alturaCm": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 20,
+          "maximum": 250
+        },
+        "asa": {
+          "type": "object",
+          "properties": {
+            "classe": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1,
+              "maximum": 6
+            },
+            "emergencia": {
+              "type": "boolean"
+            }
+          }
+        },
+        "alergias": {
+          "type": "string"
+        },
+        "plano": {
+          "type": "object",
+          "description": "Dados da operadora para a guia TISS",
+          "required": [
+            "operadora",
+            "carteirinha",
+            "numeroGuia"
+          ],
+          "properties": {
+            "operadora": {
+              "type": "string"
+            },
+            "registroAns": {
+              "type": "string",
+              "description": "Registro ANS da operadora (6 dígitos)"
+            },
+            "carteirinha": {
+              "type": "string",
+              "description": "Número da carteira do beneficiário"
+            },
+            "validadeCarteirinha": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date"
+            },
+            "numeroGuia": {
+              "type": "string",
+              "description": "Nº da guia (prestador/operadora)"
+            },
+            "senhaAutorizacao": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "procedimento": {
+      "type": "object",
+      "required": [
+        "descricao",
+        "anestesista"
+      ],
+      "properties": {
+        "descricao": {
+          "type": "string"
+        },
+        "codigoTuss": {
+          "type": "string",
+          "pattern": "^(\\d{8})?$",
+          "description": "Código TUSS (8 dígitos), opcional"
+        },
+        "carater": {
+          "enum": [
+            "eletivo",
+            "urgência"
+          ]
+        },
+        "hospital": {
+          "type": "string"
+        },
+        "sala": {
+          "type": "string"
+        },
+        "cirurgiao": {
+          "$ref": "#/$defs/profissional"
+        },
+        "anestesista": {
+          "$ref": "#/$defs/profissional"
+        }
+      }
+    },
+    "tecnicaAnestesica": {
+      "type": "object",
+      "properties": {
+        "descricao": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "descricao"
+      ]
+    },
+    "horarios": {
+      "type": "object",
+      "properties": {
+        "inicioAnestesia": {
+          "$ref": "#/$defs/horario"
+        },
+        "inicioCirurgia": {
+          "$ref": "#/$defs/horario"
+        },
+        "fimCirurgia": {
+          "$ref": "#/$defs/horario"
+        },
+        "fimAnestesia": {
+          "$ref": "#/$defs/horario"
+        }
+      }
+    },
+    "drogas": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/registroBase"
+          }
+        ],
+        "type": "object",
+        "required": [
+          "nome",
+          "dose",
+          "unidade",
+          "via"
+        ],
+        "properties": {
+          "nome": {
+            "type": "string"
+          },
+          "dose": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "unidade": {
+            "enum": [
+              "mg",
+              "mcg",
+              "g",
+              "mL",
+              "UI",
+              "mEq",
+              "%",
+              "L/min",
+              "mcg/kg/min",
+              "mcg/kg/h",
+              "mg/kg/h",
+              "mcg/min",
+              "mg/h",
+              "mL/h"
+            ]
+          },
+          "via": {
+            "enum": [
+              "EV",
+              "IM",
+              "SC",
+              "VO",
+              "SL",
+              "INALATÓRIA",
+              "INTRATECAL",
+              "PERIDURAL",
+              "PERINEURAL",
+              "INFILTRAÇÃO",
+              "INTRANASAL",
+              "TÓPICA"
+            ]
+          },
+          "modo": {
+            "enum": [
+              "bolus",
+              "infusao"
+            ]
+          }
+        }
+      }
+    },
+    "sinaisVitais": {
+      "type": "array",
+      "description": "Série temporal; uma amostra por horário (minuto)",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/registroBase"
+          }
+        ],
+        "type": "object",
+        "properties": {
+          "paSistolica": {
+            "type": "number"
+          },
+          "paDiastolica": {
+            "type": "number"
+          },
+          "pam": {
+            "type": "number",
+            "description": "Pressão arterial média (mmHg). Medida/falada, ou calculada = round((PAS + 2×PAD)/3) quando não informada"
+          },
+          "pamOrigem": {
+            "enum": [
+              "medida",
+              "calculada"
+            ],
+            "description": "Origem da PAM"
+          },
+          "ic": {
+            "type": "number",
+            "minimum": 0,
+            "readOnly": true,
+            "description": "Índice de choque (calculado) = FC ÷ PAS do mesmo registro, 2 casas decimais. Ausente se faltar FC ou PAS, ou PAS = 0. Recalculado a cada edição."
+          },
+          "fc": {
+            "type": "number"
+          },
+          "spo2": {
+            "type": "number",
+            "maximum": 100
+          },
+          "fr": {
+            "type": "number"
+          },
+          "temperatura": {
+            "type": "number"
+          },
+          "etco2": {
+            "type": "number",
+            "description": "Opcional"
+          }
+        }
+      }
+    },
+    "fluidos": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/registroBase"
+          }
+        ],
+        "type": "object",
+        "required": [
+          "tipo",
+          "categoria"
+        ],
+        "properties": {
+          "tipo": {
+            "type": "string"
+          },
+          "categoria": {
+            "enum": [
+              "cristaloide",
+              "coloide",
+              "hemoderivado"
+            ]
+          },
+          "volumeMl": {
+            "$ref": "#/$defs/volume"
+          },
+          "unidades": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Bolsas/unidades (hemoderivados)"
+          }
+        }
+      }
+    },
+    "diurese": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/registroBase"
+          }
+        ],
+        "type": "object",
+        "properties": {
+          "volumeMl": {
+            "$ref": "#/$defs/volume"
+          }
+        }
+      }
+    },
+    "perdaSanguinea": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/registroBase"
+          }
+        ],
+        "type": "object",
+        "properties": {
+          "volumeMl": {
+            "$ref": "#/$defs/volume"
+          }
+        }
+      }
+    },
+    "eventos": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/registroBase"
+          }
+        ],
+        "type": "object",
+        "properties": {
+          "descricao": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "intercorrencias": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/registroBase"
+          }
+        ],
+        "type": "object",
+        "properties": {
+          "descricao": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "observacoes": {
+      "type": "string"
+    },
+    "anotacoesExtras": {
+      "type": "object",
+      "description": "Última etapa antes de salvar: ditado livre, frase a frase, editável",
+      "required": [
+        "texto",
+        "frases"
+      ],
+      "properties": {
+        "texto": {
+          "type": "string",
+          "description": "Texto final (editável pelo toque)"
+        },
+        "frases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "texto": {
+                "type": "string"
+              },
+              "horario": {
+                "$ref": "#/$defs/horario"
+              }
+            },
+            "required": [
+              "texto"
+            ]
+          }
+        }
+      }
+    },
+    "auditoria": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "em": {
+            "type": "string"
+          },
+          "acao": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "origem": {
+            "type": "string"
+          },
+          "texto": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

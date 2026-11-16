@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="pt-BR" data-tema="escuro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0f14">
+  <meta name="description" content="Ficha de anestesia com preenchimento por voz, revisão antes de salvar e PDF para o plano de saúde.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Ficha Anestesia">
+  <title>Ficha de Anestesia por Voz</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="titulo"><strong><span class="longo">Ficha de </span>Anestesia</strong><span id="statusFicha" class="selo">Rascunho</span></div>
+    <div class="acoes-topo">
+      <button id="btnInstalar" class="btn-icone" hidden aria-label="Instalar app">⤓</button>
+      <button id="btnTela" class="btn-icone" aria-label="Manter tela acesa" title="Manter tela acesa">☀︎</button>
+      <button id="btnTema" class="btn-icone" aria-label="Alternar tema claro/escuro">◐</button>
+      <button id="btnMenu" class="btn-icone" aria-label="Menu">☰</button>
+    </div>
+  </header>
+
+  <nav class="etapas" aria-label="Etapas">
+    <button data-etapa="dados" class="ativa">1<span>Dados</span></button>
+    <button data-etapa="registro">2<span>Registro</span></button>
+    <button data-etapa="anotacoes">3<span>Anotações</span></button>
+    <button data-etapa="revisao">4<span>Revisão</span></button>
+  </nav>
+
+  <div id="avisoVoz" class="aviso" hidden></div>
+
+  <main>
+    <section id="etapa-dados" class="etapa ativa">
+      <p class="dica">Hospital, documentos e identificação: preencher à mão após imprimir. Para dados clínicos, fale ou digite, ex.: <em>"peso 70 quilos, ASA 2"</em>, <em>"anestesista doutora Ana Lima CRM 12345 SP"</em>.</p>
+      <form id="formDados" autocomplete="off" onsubmit="return false"></form>
+      <button class="btn grande primario" data-ir="registro">Ir para o registro intraoperatório →</button>
+    </section>
+
+    <section id="etapa-registro" class="etapa">
+      <div class="grafico-barra">
+        <strong>Gráfico</strong>
+        <button id="btnAjuste" class="btn pequeno">Ajustar à tela</button>
+      </div>
+      <div class="grafico-wrap" id="graficoWrap"><canvas id="grafico" role="img" aria-label="Gráfico da anestesia"></canvas></div>
+      <div id="contadores" class="contadores"></div>
+      <p class="dica">Exemplos: <em>"propofol 150 miligramas venoso às 10 e 15"</em> · <em>"PA 120 por 80, FC 72, saturação 98"</em> · <em>"ringer 500 ml"</em> · <em>"diurese 200"</em> · <em>"início da cirurgia agora"</em>. Diga <b>confirmar</b>, <b>descartar</b> ou <b>desfazer</b>. Ao terminar, diga <b>próximo</b>.</p>
+      <h2>Linha do tempo</h2>
+      <ol id="linhaTempo" class="lista"></ol>
+      <button class="btn grande primario" data-ir="anotacoes">Finalizar registro → Anotações extras</button>
+    </section>
+
+    <section id="etapa-anotacoes" class="etapa">
+      <h2>Anotações extras</h2>
+      <p class="dica">Dite livremente: cada frase é acrescentada ao texto (pode editar com o toque). Diga <b>apagar última frase</b> para remover a última, e <b>próximo</b> ou <b>salvar</b> para ir à revisão.</p>
+      <textarea id="anotacoes" rows="8" placeholder="Toque no microfone e dite as anotações extras…"></textarea>
+      <ol id="frases" class="lista"></ol>
+      <div class="linha-botoes">
+        <button id="btnApagarFrase" class="btn grande">⌫ Apagar última frase</button>
+        <button class="btn grande primario" data-ir="revisao">Próximo → Revisão</button>
+      </div>
+    </section>
+
+    <section id="etapa-revisao" class="etapa">
+      <h2>Revisão final</h2>
+      <div id="pendenciasFicha"></div>
+      <div id="resumo" class="resumo"></div>
+      <div class="linha-botoes col">
+        <button id="btnSalvar" class="btn enorme primario">💾 Salvar ficha</button>
+        <button id="btnPdf" class="btn enorme">📄 Gerar PDF</button>
+        <div id="pdfAcoes" class="linha-botoes" hidden>
+          <a id="lnkPdf" class="btn grande" download>⬇ Baixar PDF</a>
+          <button id="btnCompartilhar" class="btn grande">↗ Compartilhar</button>
+        </div>
+        <button id="btnJson" class="btn grande">{ } Exportar JSON</button>
+      </div>
+    </section>
+  </main>
+
+  <section id="pendentes" class="folha" aria-live="polite" hidden>
+    <div class="folha-topo"><strong>Revisar antes de registrar</strong>
+      <div><button id="btnDescartarTudo" class="btn pequeno">Descartar tudo</button> <button id="btnConfirmarTudo" class="btn pequeno primario">Confirmar tudo</button></div>
+    </div>
+    <ul id="listaPendentes"></ul>
+  </section>
+
+  <footer class="dock">
+    <div id="transcricao" class="transcricao" aria-live="polite">Toque no microfone e fale.</div>
+    <form id="formTexto" class="form-texto" hidden>
+      <input id="entradaTexto" type="text" inputmode="text" enterkeyhint="send" placeholder="Digite como falaria… ex.: fentanil 200 mcg" autocomplete="off">
+      <button class="btn primario" type="submit">Enviar</button>
+    </form>
+    <div class="dock-botoes">
+      <button id="btnTeclado" class="btn-dock" aria-label="Digitar">⌨<span>Digitar</span></button>
+      <button id="btnMic" class="mic" aria-label="Microfone" aria-pressed="false"><span class="mic-icone">🎤</span><span id="micRotulo">Falar</span></button>
+      <button id="btnSoVoz" class="btn-dock" aria-pressed="false" aria-label="Modo só voz">🗣<span>Só voz</span></button>
+    </div>
+  </footer>
+
+  <dialog id="dlgEditar">
+    <form method="dialog" id="formEditar">
+      <h3 id="tituloEditar">Editar</h3>
+      <div id="camposEditar"></div>
+      <div class="linha-botoes">
+        <button value="cancelar" class="btn grande">Cancelar</button>
+        <button value="ok" id="btnOkEditar" class="btn grande primario">Confirmar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlgMenu">
+    <form method="dialog">
+      <h3>Menu</h3>
+      <div class="linha-botoes col">
+        <button value="nova" class="btn grande">＋ Nova ficha</button>
+        <button value="abrir" class="btn grande">📂 Fichas salvas</button>
+        <button value="importar" class="btn grande">⇪ Importar JSON</button>
+        <button value="exemplo" class="btn grande">🧪 Carregar exemplo (fictício)</button>
+        <label class="opcao"><input type="checkbox" id="optPtt"> Segurar para falar (push-to-talk)</label>
+        <label class="opcao"><input type="checkbox" id="optLer" checked> Ler em voz alta no modo só voz</label>
+        <label class="opcao"><input type="checkbox" id="optBipe" checked> Bipe e vibração ao capturar</label>
+        <button value="fechar" class="btn grande primario">Fechar</button>
+      </div>
+      <p class="rodape-menu">Protótipo — não validado clinicamente. Dados ficam só neste aparelho.</p>
+    </form>
+  </dialog>
+
+  <dialog id="dlgFichas"><form method="dialog"><h3>Fichas salvas neste aparelho</h3><ul id="listaFichas" class="lista"></ul><button class="btn grande primario">Fechar</button></form></dialog>
+  <input type="file" id="arquivoJson" accept="application/json,.json" hidden>
+  <div id="toast" class="toast" role="status" aria-live="assertive"></div>
+
+  <script src="vendor/jspdf.umd.min.js"></script>
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
